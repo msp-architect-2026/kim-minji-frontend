@@ -1,16 +1,15 @@
 # ---------- build stage ----------
-FROM --platform=linux/arm64 node:20-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
-RUN npm rebuild esbuild
-
+RUN npm install --ignore-scripts
+RUN ./node_modules/.bin/esbuild --version || npm install esbuild
 COPY . .
 RUN npm run build
 
 # ---------- runtime stage ----------
-FROM --platform=linux/arm64 nginx:alpine
+FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
