@@ -8,8 +8,11 @@ RUN ./node_modules/.bin/esbuild --version || npm install esbuild
 
 COPY . .
 
+
 ARG VITE_API_URL
+RUN echo "확인: VITE_API_URL=$VITE_API_URL"
 RUN echo "VITE_API_URL=$VITE_API_URL" > .env
+RUN cat .env
 RUN npm run build
 
 # ---------- runtime stage ----------
