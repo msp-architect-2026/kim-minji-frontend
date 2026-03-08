@@ -28,9 +28,9 @@ function Nav() {
         {links.map(l => (
           <Link key={l.to} to={l.to} style={{
             fontSize: 14, fontWeight: 400,
-            color: location.pathname === l.to ? '#0071e3' : '#1d1d1f',
+            color: location.pathname === l.to ? '#1d1d1f' : '#6e6e73',
             textDecoration: 'none',
-            borderBottom: location.pathname === l.to ? '2px solid #0071e3' : '2px solid transparent',
+            borderBottom: location.pathname === l.to ? '2px solid #1d1d1f' : '2px solid transparent',
             paddingBottom: 2
           }}>{l.label}</Link>
         ))}

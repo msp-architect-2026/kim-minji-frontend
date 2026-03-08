@@ -57,7 +57,7 @@ export default function RecordList() {
               return (
                 <tr key={r.id} style={{ borderTop: '1px solid #f5f5f7' }}>
                   <td style={{ padding: '14px 24px', fontSize: 14 }}>
-                    <Link to={`/records/${r.id}`} style={{ color: '#0071e3', textDecoration: 'none' }}>{r.filename}</Link>
+                    <Link to={`/records/${r.id}`} style={{ color: '#1d1d1f', textDecoration: 'none' }}>{r.filename}</Link>
                   </td>
                   <td style={{ padding: '14px 24px' }}>
                     <span style={{ background: badge.bg, color: badge.color, borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>

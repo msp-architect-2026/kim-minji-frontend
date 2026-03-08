@@ -48,7 +48,7 @@ export default function Dashboard() {
       <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ padding: '24px 32px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: 17, fontWeight: 600, color: '#1d1d1f', margin: 0 }}>Recent Inspections</h2>
-          <Link to="/records" style={{ fontSize: 14, color: '#0071e3', textDecoration: 'none' }}>View all →</Link>
+          <Link to="/records" style={{ fontSize: 14, color: '#1d1d1f', textDecoration: 'none' }}>View all →</Link>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>

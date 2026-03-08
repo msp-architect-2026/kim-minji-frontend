@@ -45,7 +45,7 @@ export default function UploadAndAnalyze() {
   const badge = result ? defectBadge(result.prediction) : null;
 
   return (
-    <div style={{ maxWidth: 600 }}>
+    <div style={{ maxWidth: 600, margin: '0 auto' }}>
       <h1 style={{ fontSize: 34, fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: 8 }}>Upload</h1>
       <p style={{ fontSize: 15, color: '#6e6e73', marginBottom: 36 }}>Upload a wafer image for AI defect analysis</p>
 
