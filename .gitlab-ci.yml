@@ -13,17 +13,19 @@ build_and_push:
   tags:
     - arm64
     - docker
+
   script:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"gitlab.local:5050\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - echo "VITE_API_URL=$VITE_API_URL" > $CI_PROJECT_DIR/.env
     - /kaniko/executor
       --context $CI_PROJECT_DIR
       --dockerfile $CI_PROJECT_DIR/Dockerfile
+      --build-arg VITE_API_URL=$VITE_API_URL
       --destination $IMAGE_NAME:$IMAGE_TAG
       --destination $IMAGE_NAME:latest
       --insecure
       --skip-tls-verify
+
   only:
     - develop
     - main
