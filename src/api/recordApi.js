@@ -1,26 +1,24 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://api.wafer.local:32088/wafer/records';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const fetchPagedRecords = async (search, page, size) => {
-  const res = await axios.get(`${BASE_URL}/pages`, {
+  const res = await axios.get(`${API_URL}/wafer/records/pages`, {
     params: { search, page, size }
   });
   return res.data;
 };
 
 export const fetchRecordById = async (id) => {
-  const res = await axios.get(`${BASE_URL}/${id}`);
+  const res = await axios.get(`${API_URL}/wafer/records/${id}`);
   return res.data;
 };
 
 export const uploadAndAnalyze = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
-
-  const res = await axios.post('http://api.wafer.local:32088/ai/predict', formData, {
+  const res = await axios.post(`${API_URL}/ai/predict`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
-
-  return res.data; // { prediction: ..., confidence: ... }
+  return res.data; // { id, prediction, confidence }
 };
