@@ -20,5 +20,20 @@ export const uploadAndAnalyze = async (file) => {
   const res = await axios.post(`${API_URL}/ai/predict`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
-  return res.data; // { id, prediction, confidence }
+  return res.data;
+};
+
+export const fetchStats = async () => {
+  const res = await axios.get(`${API_URL}/wafer/stats`);
+  return res.data;
+};
+
+export const fetchDailyStats = async (days = 7) => {
+  const res = await axios.get(`${API_URL}/wafer/stats/daily`, { params: { days } });
+  return res.data;
+};
+
+export const fetchDefectDistribution = async () => {
+  const res = await axios.get(`${API_URL}/wafer/stats/defect-distribution`);
+  return res.data;
 };
