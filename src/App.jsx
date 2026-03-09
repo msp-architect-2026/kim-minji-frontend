@@ -4,6 +4,7 @@ import RecordDetail from './pages/RecordDetail';
 import UploadAndAnalyze from './pages/UploadAndAnalyze';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
+import Monitoring from './pages/Monitoring';
 
 function Nav() {
   const location = useLocation();
@@ -12,6 +13,7 @@ function Nav() {
     { to: '/analyze', label: 'Upload' },
     { to: '/records', label: 'Records' },
     { to: '/analytics', label: 'Analytics' },
+    { to: '/monitoring', label: 'Monitoring' },
   ];
   return (
     <header style={{
@@ -50,6 +52,7 @@ function App() {
           <Route path="/records" element={<RecordList />} />
           <Route path="/records/:id" element={<RecordDetail />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/monitoring" element={<Monitoring />} />
         </Routes>
       </main>
     </div>
