@@ -1,9 +1,9 @@
 export default function Monitoring() {
   const clusterUrl =
     "http://grafana.wafer.local:32088/d/efa86fd1d0c121a26444b636a3f509a8/kubernetes-compute-resources-cluster?orgId=1&kiosk=true";
-  const appUrl =
-    "http://grafana.wafer.local:32088/d/affgymc2dxy4gf/5499625?orgId=1&kiosk=true";
 
+  const appUrl =
+  "http://grafana.wafer.local:32088/d/dffkf5s4tktmob/backend-ai?orgId=1&kiosk=true";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>클러스터 모니터링</h2>
