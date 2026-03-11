@@ -13,19 +13,19 @@ export default function Monitoring() {
       <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>클러스터 모니터링</h2>
       <iframe
         src={clusterUrl}
-        style={{ border: "none", width: "100%", height: 500, borderRadius: 12 }}
+        style={{ border: "none", width: "100%", height: 800, borderRadius: 12 }}
         title="Cluster Dashboard"
       />
       <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>앱 메트릭</h2>
       <iframe
         src={appUrl}
-        style={{ border: "none", width: "100%", height: 500, borderRadius: 12 }}
+        style={{ border: "none", width: "100%", height: 2000, borderRadius: 12 }}
         title="App Dashboard"
       />
       <h2 style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>로그</h2>
       <iframe
         src={logUrl}
-        style={{ border: "none", width: "100%", height: 500, borderRadius: 12 }}
+        style={{ border: "none", width: "100%", height: 1200, borderRadius: 12 }}
         title="Log Dashboard"
       />
     </div>
