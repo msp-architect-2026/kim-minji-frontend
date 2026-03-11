@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchPagedRecords, fetchAllRecords } from '../api/recordApi';
 
+const DEFECT_TYPES = ['All', 'Center', 'Donut', 'Edge-Loc', 'Edge-Ring', 'Loc', 'Near-full', 'Random', 'Scratch', 'none'];
+
 const defectBadge = (prediction) => {
   if (!prediction || prediction === 'none') return { bg: '#e8f5e9', color: '#2e7d32' };
   return { bg: '#fff3e0', color: '#e65100' };
@@ -28,17 +30,18 @@ const downloadCSV = (records) => {
 
 export default function RecordList() {
   const [records, setRecords] = useState([]);
-  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState('All');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
+    const search = selected === 'All' ? '' : selected;
     fetchPagedRecords(search, page, 10).then(d => {
       setRecords(d.content);
       setTotalPages(d.totalPages);
     }).catch(console.error);
-  }, [search, page]);
+  }, [selected, page]);
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -58,18 +61,22 @@ export default function RecordList() {
       <p style={{ fontSize: 15, color: '#6e6e73', marginBottom: 36 }}>All inspection results</p>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <input
-          type="text"
-          placeholder="Search by prediction type..."
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(0); }}
-          style={{
-            width: 280, padding: '10px 16px', borderRadius: 10,
-            border: '1px solid #e0e0e0', fontSize: 14, outline: 'none',
-            background: '#fff', color: '#1d1d1f',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
-          }}
-        />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {DEFECT_TYPES.map(type => (
+            <button
+              key={type}
+              onClick={() => { setSelected(type); setPage(0); }}
+              style={{
+                padding: '7px 16px', borderRadius: 20,
+                border: selected === type ? 'none' : '1px solid #e0e0e0',
+                background: selected === type ? '#1d1d1f' : '#fff',
+                color: selected === type ? '#fff' : '#1d1d1f',
+                fontSize: 13, fontWeight: selected === type ? 600 : 400,
+                cursor: 'pointer', transition: 'all 0.15s'
+              }}
+            >{type}</button>
+          ))}
+        </div>
         <button
           onClick={handleDownload}
           disabled={downloading}
@@ -78,7 +85,7 @@ export default function RecordList() {
             background: downloading ? '#e0e0e0' : '#1d1d1f',
             color: '#fff', fontSize: 14, fontWeight: 600,
             border: 'none', cursor: downloading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)', whiteSpace: 'nowrap'
           }}
         >
           {downloading ? 'Downloading...' : '⬇ Export CSV'}
