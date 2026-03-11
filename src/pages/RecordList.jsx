@@ -1,10 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchPagedRecords } from '../api/recordApi';
+import { fetchPagedRecords, fetchAllRecords } from '../api/recordApi';
 
 const defectBadge = (prediction) => {
   if (!prediction || prediction === 'none') return { bg: '#e8f5e9', color: '#2e7d32' };
   return { bg: '#fff3e0', color: '#e65100' };
+};
+
+const downloadCSV = (records) => {
+  const header = ['ID', 'Filename', 'Prediction', 'Confidence(%)', 'Date'];
+  const rows = records.map(r => [
+    r.id,
+    r.filename,
+    r.prediction,
+    (r.confidence * 100).toFixed(1),
+    r.createdAt?.slice(0, 16).replace('T', ' ')
+  ]);
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `wafer_inspection_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 };
 
 export default function RecordList() {
@@ -12,6 +31,7 @@ export default function RecordList() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetchPagedRecords(search, page, 10).then(d => {
@@ -20,12 +40,24 @@ export default function RecordList() {
     }).catch(console.error);
   }, [search, page]);
 
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const all = await fetchAllRecords();
+      downloadCSV(all);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <div>
       <h1 style={{ fontSize: 34, fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.5px', marginBottom: 8 }}>Records</h1>
       <p style={{ fontSize: 15, color: '#6e6e73', marginBottom: 36 }}>All inspection results</p>
 
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <input
           type="text"
           placeholder="Search by prediction type..."
@@ -38,6 +70,19 @@ export default function RecordList() {
             boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
           }}
         />
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          style={{
+            padding: '10px 20px', borderRadius: 10,
+            background: downloading ? '#e0e0e0' : '#1d1d1f',
+            color: '#fff', fontSize: 14, fontWeight: 600,
+            border: 'none', cursor: downloading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+          }}
+        >
+          {downloading ? 'Downloading...' : '⬇ Export CSV'}
+        </button>
       </div>
 
       <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', overflow: 'hidden' }}>

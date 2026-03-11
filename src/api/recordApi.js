@@ -37,3 +37,8 @@ export const fetchDefectDistribution = async () => {
   const res = await axios.get(`${API_URL}/wafer/stats/defect-distribution`);
   return res.data;
 };
+
+export const fetchAllRecords = async () => {
+  const res = await axios.get(`${API_URL}/wafer/records`);
+  return res.data;
+};
