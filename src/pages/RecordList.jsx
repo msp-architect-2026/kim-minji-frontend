@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchPagedRecords, fetchAllRecords } from '../api/recordApi';
+import { getDefectColor } from '../utils/defectColors';
 
 const DEFECT_TYPES = ['All', 'Center', 'Donut', 'Edge-Loc', 'Edge-Ring', 'Loc', 'Near-full', 'Random', 'Scratch', 'none'];
-
-const defectBadge = (prediction) => {
-  if (!prediction || prediction === 'none') return { bg: '#e8f5e9', color: '#2e7d32' };
-  return { bg: '#fff3e0', color: '#e65100' };
-};
 
 const downloadCSV = (records) => {
   const header = ['ID', 'Filename', 'Prediction', 'Confidence(%)', 'Date'];
@@ -62,20 +58,24 @@ export default function RecordList() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {DEFECT_TYPES.map(type => (
-            <button
-              key={type}
-              onClick={() => { setSelected(type); setPage(0); }}
-              style={{
-                padding: '7px 16px', borderRadius: 20,
-                border: selected === type ? 'none' : '1px solid #e0e0e0',
-                background: selected === type ? '#1d1d1f' : '#fff',
-                color: selected === type ? '#fff' : '#1d1d1f',
-                fontSize: 13, fontWeight: selected === type ? 600 : 400,
-                cursor: 'pointer', transition: 'all 0.15s'
-              }}
-            >{type}</button>
-          ))}
+          {DEFECT_TYPES.map(type => {
+            const c = type === 'All' ? null : getDefectColor(type);
+            const isSelected = selected === type;
+            return (
+              <button
+                key={type}
+                onClick={() => { setSelected(type); setPage(0); }}
+                style={{
+                  padding: '7px 16px', borderRadius: 20,
+                  border: isSelected ? 'none' : `1px solid ${c ? c.color : '#e0e0e0'}`,
+                  background: isSelected ? (c ? c.color : '#1d1d1f') : (c ? c.bg : '#fff'),
+                  color: isSelected ? '#fff' : (c ? c.color : '#1d1d1f'),
+                  fontSize: 13, fontWeight: isSelected ? 600 : 500,
+                  cursor: 'pointer', transition: 'all 0.15s'
+                }}
+              >{type}</button>
+            );
+          })}
         </div>
         <button
           onClick={handleDownload}
@@ -105,7 +105,7 @@ export default function RecordList() {
             {records.length === 0 ? (
               <tr><td colSpan={4} style={{ padding: '48px 24px', textAlign: 'center', color: '#6e6e73', fontSize: 14 }}>No records found</td></tr>
             ) : records.map(r => {
-              const badge = defectBadge(r.prediction);
+              const badge = getDefectColor(r.prediction);
               return (
                 <tr key={r.id} style={{ borderTop: '1px solid #f5f5f7' }}>
                   <td style={{ padding: '14px 24px', fontSize: 14 }}>

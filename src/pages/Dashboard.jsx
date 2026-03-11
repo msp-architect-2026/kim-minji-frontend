@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchStats, fetchPagedRecords } from '../api/recordApi';
+import { getDefectColor } from '../utils/defectColors';
 
 function KpiCard({ label, value, sub }) {
   return (
@@ -23,11 +24,6 @@ export default function Dashboard() {
     fetchStats().then(setStats).catch(console.error);
     fetchPagedRecords('', 0, 8).then(d => setRecords(d.content)).catch(console.error);
   }, []);
-
-  const defectBadgeColor = (prediction) => {
-    if (!prediction || prediction === 'none') return { bg: '#e8f5e9', color: '#2e7d32' };
-    return { bg: '#fff3e0', color: '#e65100' };
-  };
 
   return (
     <div>
@@ -59,8 +55,8 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {records.map((r, i) => {
-              const badge = defectBadgeColor(r.prediction);
+            {records.map(r => {
+              const badge = getDefectColor(r.prediction);
               return (
                 <tr key={r.id} style={{ borderTop: '1px solid #f5f5f7' }}>
                   <td style={{ padding: '14px 24px', fontSize: 14, color: '#1d1d1f' }}>
