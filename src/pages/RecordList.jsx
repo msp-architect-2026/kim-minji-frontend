@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchPagedRecords, fetchAllRecords } from '../api/recordApi';
+import { fetchPagedRecords, exportRecords } from '../api/recordApi';
 import { getDefectColor } from '../utils/defectColors';
 
 const DEFECT_TYPES = ['All', 'Center', 'Donut', 'Edge-Loc', 'Edge-Ring', 'Loc', 'Near-full', 'Random', 'Scratch', 'none'];
 
-const downloadCSV = (records) => {
+const downloadCSV = (records, filename) => {
   const header = ['ID', 'Filename', 'Prediction', 'Confidence(%)', 'Date'];
   const rows = records.map(r => [
     r.id,
@@ -19,7 +19,7 @@ const downloadCSV = (records) => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `wafer_inspection_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 };
@@ -30,6 +30,10 @@ export default function RecordList() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [downloading, setDownloading] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const menuRef = useRef(null);
 
   useEffect(() => {
     const search = selected === 'All' ? '' : selected;
@@ -39,11 +43,35 @@ export default function RecordList() {
     }).catch(console.error);
   }, [selected, page]);
 
-  const handleDownload = async () => {
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleExport = async (type) => {
     setDownloading(true);
+    setShowExportMenu(false);
     try {
-      const all = await fetchAllRecords();
-      downloadCSV(all);
+      let data, filename;
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (type === 'all') {
+        data = await exportRecords();
+        filename = `wafer_inspection_all_${today}.csv`;
+      } else if (type === 'filter') {
+        const prediction = selected === 'All' ? null : selected;
+        data = await exportRecords(prediction);
+        filename = `wafer_inspection_${selected}_${today}.csv`;
+      } else if (type === 'date') {
+        data = await exportRecords(null, startDate, endDate);
+        filename = `wafer_inspection_${startDate}_${endDate}.csv`;
+      }
+      downloadCSV(data, filename);
     } catch (e) {
       console.error(e);
     } finally {
@@ -77,19 +105,65 @@ export default function RecordList() {
             );
           })}
         </div>
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          style={{
-            padding: '10px 20px', borderRadius: 10,
-            background: downloading ? '#e0e0e0' : '#1d1d1f',
-            color: '#fff', fontSize: 14, fontWeight: 600,
-            border: 'none', cursor: downloading ? 'not-allowed' : 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.12)', whiteSpace: 'nowrap'
-          }}
-        >
-          {downloading ? 'Downloading...' : '⬇ Export CSV'}
-        </button>
+
+        <div style={{ position: 'relative' }} ref={menuRef}>
+          <button
+            onClick={() => setShowExportMenu(v => !v)}
+            disabled={downloading}
+            style={{
+              padding: '10px 20px', borderRadius: 10,
+              background: downloading ? '#e0e0e0' : '#1d1d1f',
+              color: '#fff', fontSize: 14, fontWeight: 600,
+              border: 'none', cursor: downloading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)', whiteSpace: 'nowrap'
+            }}
+          >
+            {downloading ? 'Downloading...' : '⬇ Export CSV ▾'}
+          </button>
+
+          {showExportMenu && (
+            <div style={{
+              position: 'absolute', right: 0, top: '110%', background: '#fff',
+              borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+              padding: '8px', zIndex: 100, minWidth: 240
+            }}>
+              <button onClick={() => handleExport('all')} style={menuItemStyle}>
+                전체 내보내기
+              </button>
+              <button onClick={() => handleExport('filter')} style={menuItemStyle}>
+                현재 필터 내보내기 ({selected})
+              </button>
+              <div style={{ padding: '8px 12px', borderTop: '1px solid #f5f5f7', marginTop: 4 }}>
+                <p style={{ fontSize: 12, color: '#6e6e73', marginBottom: 8 }}>날짜 범위 내보내기</p>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 12 }}
+                  />
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    style={{ flex: 1, padding: '6px 8px', borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 12 }}
+                  />
+                </div>
+                <button
+                  onClick={() => handleExport('date')}
+                  disabled={!startDate || !endDate}
+                  style={{
+                    width: '100%', padding: '8px', borderRadius: 8,
+                    background: (!startDate || !endDate) ? '#f5f5f7' : '#1d1d1f',
+                    color: (!startDate || !endDate) ? '#c0c0c0' : '#fff',
+                    border: 'none', fontSize: 12, fontWeight: 600,
+                    cursor: (!startDate || !endDate) ? 'not-allowed' : 'pointer'
+                  }}
+                >내보내기</button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
@@ -149,3 +223,10 @@ export default function RecordList() {
     </div>
   );
 }
+
+const menuItemStyle = {
+  width: '100%', padding: '10px 12px', borderRadius: 8,
+  background: 'transparent', border: 'none',
+  textAlign: 'left', fontSize: 13, color: '#1d1d1f',
+  cursor: 'pointer', display: 'block'
+};

@@ -42,3 +42,12 @@ export const fetchAllRecords = async () => {
   const res = await axios.get(`${API_URL}/wafer/records`);
   return res.data;
 };
+
+export const exportRecords = async (prediction, startDate, endDate) => {
+  const params = {};
+  if (prediction) params.prediction = prediction;
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  const res = await axios.get(`${API_URL}/wafer/records/export`, { params });
+  return res.data;
+};
