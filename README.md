@@ -37,38 +37,66 @@ Backend REST API와 연동하며, Grafana 대시보드를 iframe으로 임베드
 
 ## ▍주요 기능
 
-### 📊 통합 대시보드
-총 검사 수, 결함 수, 정상 수, 평균 신뢰도 KPI 카드와 최근 추론 이력을 실시간으로 확인합니다.
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/528a50c3-a73c-42ac-980a-80a9237098c5" width="720"/>
-</p>
-
-### 🤖 이미지 업로드 및 AI 추론
+### 1. 🤖 이미지 업로드 및 AI 추론
 드래그앤드롭 또는 파일 선택으로 웨이퍼 이미지를 업로드하면 결함 유형과 신뢰도를 즉시 반환합니다.
+
+| none | scratch | random |
+|------|---------|--------|
+| <img src="https://github.com/user-attachments/assets/c031f298-ae7f-4d50-9ed4-65650c780f91" width="250"/> | <img src="https://github.com/user-attachments/assets/acacd5a2-510b-4341-a6ff-5562c0f581e6" width="250"/> | <img src="https://github.com/user-attachments/assets/be2e48a0-634f-4f22-ab43-d936e4950c7e" width="250"/> |
+
+| loc | donut | near-full |
+|-----|-------|-----------|
+| <img src="https://github.com/user-attachments/assets/51864da6-016b-4b4d-8809-b110a397dd8b" width="250"/> | <img src="https://github.com/user-attachments/assets/ab4940bb-7843-42af-832d-856b4e518898" width="250"/> | <img src="https://github.com/user-attachments/assets/7a04f608-c9c7-4881-90e6-b4732247d4e5" width="250"/> |
+
+| center | edge-loc | edge-ring |
+|--------|----------|-----------|
+| <img src="https://github.com/user-attachments/assets/1b73faca-8462-4dcb-a312-44ef1c2af535" width="250"/> | <img src="https://github.com/user-attachments/assets/e6b8d7f2-a9e3-4110-ab03-3c56e304ac5f" width="250"/> | <img src="https://github.com/user-attachments/assets/d1a2fe6c-3042-494b-9fba-d28902837c8d" width="250"/> |
+
+<br>
+
+### 2. 🖥 통합 운영 대시보드
+
+시스템 전체 분석 현황을 한눈에 확인할 수 있는 **통합 관제 화면**을 제공합니다.  
+총 검사 수, 결함 수, 정상 수, 평균 신뢰도 등 핵심 KPI를 실시간으로 확인할 수 있습니다.
+
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/c031f298-ae7f-4d50-9ed4-65650c780f91" width="720"/>
+  <img src="https://github.com/user-attachments/assets/528a50c3-a73c-42ac-980a-80a9237098c5" width="620"/>
+</p>
+
+### 3. 📊 실시간 분석 대시보드
+KPI 카드, 결함 분포, 일별 추이 차트를 통해 분석 현황을 실시간으로 확인할 수 있습니다.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/70e48e28-f20f-4eac-9b41-fd6dc42535db" width="620"/>
+</p>
+
+### 4. 📦 이력 관리 및 CSV 내보내기
+검색, 페이징, 날짜·결함 유형 필터를 지원하며 분석 이력을 날짜별로 CSV로 내보낼 수 있습니다. <br>
+각 항목 클릭 시 파일명, 예측 클래스, 신뢰도, 생성 시각을 상세 확인할 수 있습니다.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e2cd6dae-b5f5-4023-a170-146092f67a2c" width="620"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/33e47aaa-930d-40d8-bb01-beab847588f8" width="620"/>
 </p>
 
 
-### 📦 이력 관리 및 CSV 내보내기
-검색, 페이징, 날짜·결함 유형 필터를 지원하며 분석 이력 전체를 CSV로 내보낼 수 있습니다.
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/e2cd6dae-b5f5-4023-a170-146092f67a2c" width="520"/>
-</p>
 
-### 📈 분석 대시보드
-일별 추이 라인차트, 결함 유형별 파이차트, 분포 테이블로 추론 결과를 시각화합니다.
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/70e48e28-f20f-4eac-9b41-fd6dc42535db" width="520"/>
-</p>
 
-### 🔍 통합 모니터링
+
+### 5. 🔍 통합 모니터링
 Grafana 대시보드(클러스터 현황 / 앱 메트릭 / 로그)를 iframe으로 임베드해 운영 현황을 한눈에 파악합니다.
+
 | 구분 | 화면 |
 |------|------|
 | **클러스터 모니터링** | <img src="https://github.com/user-attachments/assets/43bc87e9-7dd0-4e7c-bb94-7313614ac96e" width="520"/> |
 | **애플리케이션 메트릭** | <img src="https://github.com/user-attachments/assets/b75f66ed-9697-4a8e-b895-7796306a32a1" width="400"/> |
 | **로그 모니터링** | <img src="https://github.com/user-attachments/assets/0bd09915-aea4-4b8e-8d68-d66227ddab53" width="520"/> |
+
+
+
 
 
 <br>
@@ -185,5 +213,6 @@ git push (main 브랜치)
 | `recharts` | 라인차트, 파이차트 |
 | `axios` | HTTP 통신 |
 | `react-router-dom` | SPA 라우팅 |
+
 
 
