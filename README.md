@@ -27,7 +27,7 @@ Backend REST API와 연동하며, Grafana 대시보드를 iframe으로 임베드
 
 | Repository | 설명 |
 |------------|------|
-| [kim-minji](https://github.com/msp-architect-2026/kim-minji-wiki) | 프로젝트 메인 (Wiki, 칸반보드) |
+| [kim-minji-wiki](https://github.com/msp-architect-2026/kim-minji-wiki) | 프로젝트 메인 (Wiki, 칸반보드) |
 | [kim-minji-backend](https://github.com/msp-architect-2026/kim-minji-backend) | Spring Boot API 서버 |
 | [kim-minji-ai](https://github.com/msp-architect-2026/kim-minji-ai) | FastAPI AI 추론 서비스 |
 | [kim-minji-helm](https://github.com/msp-architect-2026/kim-minji-helm) | Kubernetes Helm Chart |
@@ -185,4 +185,5 @@ git push (main 브랜치)
 | `recharts` | 라인차트, 파이차트 |
 | `axios` | HTTP 통신 |
 | `react-router-dom` | SPA 라우팅 |
+
 
