@@ -1,12 +1,15 @@
+// Grafana 주소는 빌드 시 주입한다 (HTTPS 전환으로 프로토콜·포트가 환경마다 다를 수 있음)
+const GRAFANA_URL = import.meta.env.VITE_GRAFANA_URL;
+
 export default function Monitoring() {
   const clusterUrl =
-    "http://grafana.wafer.local:32088/d/efa86fd1d0c121a26444b636a3f509a8/kubernetes-compute-resources-cluster?orgId=1&kiosk=true";
+    `${GRAFANA_URL}/d/efa86fd1d0c121a26444b636a3f509a8/kubernetes-compute-resources-cluster?orgId=1&kiosk=true`;
 
   const appUrl =
-    "http://grafana.wafer.local:32088/d/dffkf5s4tktmob/backend-ai?orgId=1&kiosk=true";
+    `${GRAFANA_URL}/d/dffkf5s4tktmob/backend-ai?orgId=1&kiosk=true`;
 
   const logUrl =
-    "http://grafana.wafer.local:32088/d/dffnj57aiurcwc/logs?orgId=1&kiosk=true";
+    `${GRAFANA_URL}/d/dffnj57aiurcwc/logs?orgId=1&kiosk=true`;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
