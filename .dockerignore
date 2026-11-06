@@ -1,0 +1,14 @@
+# 빌드 컨텍스트에서 제외 (로컬 node_modules가 이미지 안의 npm ci 결과를 덮어쓰지 않게)
+node_modules
+dist
+.vite
+.env
+.env.*
+.git
+.github
+.gitlab-ci.yml
+.omc
+.idea
+.DS_Store
+*.md
+update-helm.sh
