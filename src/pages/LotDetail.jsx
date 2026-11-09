@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  apiErrorMessage, fetchInspectionEvents, fetchLot, fetchProcessHistory, holdLot, inspectWafer, releaseLot,
-  retryInspection, reviewInspection,
+  apiErrorMessage, fetchInspectionEvents, fetchLot, fetchProcessHistory, fetchRoute, holdLot, inspectWafer, releaseLot,
+  retryInspection, reviewInspection, trackIn, trackOut,
 } from '../api/lotApi';
 import { DEFECT_COLORS } from '../utils/defectColors';
 import { LOT_STATUS, WAFER_STATUS } from '../utils/waferStatus';
@@ -85,6 +85,75 @@ function HoldPanel({ lot, onChanged }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+const STEP_STYLE = {
+  PENDING: { label: 'Pending', color: '#6e6e73', background: '#f5f5f7' },
+  IN_PROGRESS: { label: 'In Progress', color: '#0071e3', background: '#e8f0ff' },
+  DONE: { label: 'Done', color: '#2e7d32', background: '#e8f5e9' },
+};
+
+function RoutePanel({ lot, onChanged }) {
+  const [route, setRoute] = useState(null);
+  const [equipment, setEquipment] = useState('');
+  const [recipe, setRecipe] = useState('');
+  const [message, setMessage] = useState('');
+
+  const load = useCallback(() => {
+    return fetchRoute(lot.id).then(setRoute).catch(e => setMessage(apiErrorMessage(e)));
+  }, [lot.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  if (!route) return null;
+
+  const run = async (action) => {
+    setMessage('');
+    try {
+      setRoute(await action());
+      setEquipment('');
+      await onChanged();
+    } catch (error) {
+      setMessage(apiErrorMessage(error));
+    }
+  };
+
+  const handleTrackIn = (e) => {
+    e.preventDefault();
+    run(() => trackIn(lot.id, { stepCode: route.nextStep, equipmentCode: equipment, recipe }));
+  };
+
+  return (
+    <div style={{ ...cardStyle, padding: 20, marginBottom: 20 }}>
+      <p style={labelStyle}>PROCESS ROUTE</p>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+        {route.steps.map(step => {
+          const style = STEP_STYLE[step.status];
+          return (
+            <div key={step.stepCode} style={{ flex: '1 1 130px', borderRadius: 12, padding: '10px 14px', background: style.background }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1d1d1f' }}>{step.stepCode}</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: style.color, fontWeight: 600 }}>{style.label}</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6e6e73' }}>{step.equipmentCode ?? '-'}</p>
+            </div>
+          );
+        })}
+      </div>
+      {route.currentStep && (
+        <button onClick={() => run(() => trackOut(lot.id, route.currentStep))} style={actionButton}>Track Out {route.currentStep}</button>
+      )}
+      {route.nextStep && lot.status === 'IN_PROGRESS' && (
+        <form onSubmit={handleTrackIn} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <select required aria-label="Equipment" value={equipment} onChange={e => setEquipment(e.target.value)} style={{ ...fieldStyle, flex: '1 1 140px' }}>
+            <option value="">{route.nextStep} equipment</option>
+            {route.availableEquipment.map(code => <option key={code} value={code}>{code}</option>)}
+          </select>
+          <input required maxLength={50} placeholder="Recipe" value={recipe} onChange={e => setRecipe(e.target.value)} style={{ ...fieldStyle, flex: '1 1 140px' }} />
+          <button type="submit" style={actionButton}>Track In {route.nextStep}</button>
+        </form>
+      )}
+      {message && <p role="alert" style={{ fontSize: 13, color: '#c62828', margin: '12px 0 0', overflowWrap: 'anywhere' }}>{message}</p>}
     </div>
   );
 }
@@ -218,6 +287,7 @@ export default function LotDetail() {
       <p style={{ fontSize: 15, color: '#6e6e73', marginBottom: 28 }}>{lot.product}</p>
 
       <HoldPanel lot={lot} onChanged={load} />
+      <RoutePanel lot={lot} onChanged={load} />
 
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ ...cardStyle, padding: 24, flex: '1 1 420px', minWidth: 0 }}>

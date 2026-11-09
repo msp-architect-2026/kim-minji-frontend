@@ -41,6 +41,21 @@ export const fetchProcessHistory = async (waferId) => {
   return res.data;
 };
 
+export const fetchRoute = async (id) => {
+  const res = await axios.get(`${API_URL}/lots/${id}/route`);
+  return res.data;
+};
+
+export const trackIn = async (id, body) => {
+  const res = await axios.post(`${API_URL}/lots/${id}/track-in`, body);
+  return res.data;
+};
+
+export const trackOut = async (id, stepCode) => {
+  const res = await axios.post(`${API_URL}/lots/${id}/track-out`, { stepCode });
+  return res.data;
+};
+
 export const holdLot = async (id, body) => {
   const res = await axios.post(`${API_URL}/lots/${id}/hold`, body);
   return res.data;
