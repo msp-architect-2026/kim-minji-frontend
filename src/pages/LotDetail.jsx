@@ -1,16 +1,92 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  apiErrorMessage, fetchInspectionEvents, fetchLot, fetchProcessHistory, inspectWafer, retryInspection,
+  apiErrorMessage, fetchInspectionEvents, fetchLot, fetchProcessHistory, holdLot, inspectWafer, releaseLot,
+  retryInspection, reviewInspection,
 } from '../api/lotApi';
+import { DEFECT_COLORS } from '../utils/defectColors';
 import { LOT_STATUS, WAFER_STATUS } from '../utils/waferStatus';
 
 const cardStyle = { background: '#fff', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' };
 const labelStyle = { fontSize: 12, color: '#6e6e73', fontWeight: 600, letterSpacing: '0.3px', margin: '0 0 8px' };
+const fieldStyle = { padding: '10px 12px', borderRadius: 10, border: '1px solid #d0d0d5', fontSize: 14, minWidth: 0, background: '#fff' };
 const actionButton = { padding: '10px 18px', borderRadius: 10, border: 'none', background: '#0071e3', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' };
 
 function StatusBadge({ status }) {
   return <span style={{ background: status.bg, color: status.color, borderRadius: 20, padding: '4px 14px', fontSize: 13, fontWeight: 600 }}>{status.label}</span>;
+}
+
+function ReviewForm({ inspection, onSubmit, busy }) {
+  const [finalPrediction, setFinalPrediction] = useState(inspection.prediction);
+  const [reviewer, setReviewer] = useState('');
+  const [comment, setComment] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({ finalPrediction, reviewer, comment });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ background: '#fff8e1', borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <p style={{ ...labelStyle, margin: 0, color: '#b26a00' }}>ENGINEER REVIEW</p>
+      <select aria-label="Final prediction" value={finalPrediction} onChange={e => setFinalPrediction(e.target.value)} style={fieldStyle}>
+        {Object.keys(DEFECT_COLORS).map(label => <option key={label} value={label}>{label}</option>)}
+      </select>
+      <input required maxLength={50} placeholder="Reviewer" value={reviewer} onChange={e => setReviewer(e.target.value)} style={fieldStyle} />
+      <input maxLength={255} placeholder="Comment (optional)" value={comment} onChange={e => setComment(e.target.value)} style={fieldStyle} />
+      <button type="submit" disabled={busy} style={actionButton}>Confirm Review</button>
+    </form>
+  );
+}
+
+function HoldPanel({ lot, onChanged }) {
+  const [text, setText] = useState('');
+  const [operator, setOperator] = useState('');
+  const [message, setMessage] = useState('');
+  const activeHold = lot.holds.find(hold => !hold.releasedAt);
+  const onHold = lot.status === 'HOLD';
+
+  if (lot.status === 'COMPLETED' && lot.holds.length === 0) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    try {
+      if (onHold) await releaseLot(lot.id, { comment: text, operator });
+      else await holdLot(lot.id, { reason: text, operator });
+      setText('');
+      await onChanged();
+    } catch (error) {
+      setMessage(apiErrorMessage(error));
+    }
+  };
+
+  return (
+    <div style={{ ...cardStyle, padding: 20, marginBottom: 20, border: onHold ? '1px solid #ef9a9a' : '1px solid transparent' }}>
+      {activeHold && (
+        <p style={{ fontSize: 15, color: '#c62828', fontWeight: 600, margin: '0 0 14px' }}>
+          On hold: {activeHold.reason} <span style={{ fontWeight: 400, fontSize: 13 }}>({activeHold.source} · {activeHold.heldBy})</span>
+        </p>
+      )}
+      {lot.status !== 'COMPLETED' && (
+        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <input required maxLength={255} placeholder={onHold ? 'Release comment' : 'Hold reason'} value={text} onChange={e => setText(e.target.value)} style={{ ...fieldStyle, flex: '2 1 200px' }} />
+          <input required maxLength={50} placeholder="Operator" value={operator} onChange={e => setOperator(e.target.value)} style={{ ...fieldStyle, flex: '1 1 120px' }} />
+          <button type="submit" style={{ ...actionButton, background: onHold ? '#0071e3' : '#c62828' }}>{onHold ? 'Release Lot' : 'Hold Lot'}</button>
+        </form>
+      )}
+      {message && <p role="alert" style={{ fontSize: 13, color: '#c62828', margin: '12px 0 0', overflowWrap: 'anywhere' }}>{message}</p>}
+      {lot.holds.some(hold => hold.releasedAt) && (
+        <ul style={{ listStyle: 'none', margin: '14px 0 0', padding: 0 }}>
+          {lot.holds.filter(hold => hold.releasedAt).map(hold => (
+            <li key={hold.id} style={{ fontSize: 13, color: '#6e6e73', padding: '4px 0' }}>
+              Released by {hold.releasedBy}: {hold.releaseComment} <span>(was {hold.reason})</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
 function SlotPanel({ lot, wafer, onChanged }) {
@@ -20,7 +96,7 @@ function SlotPanel({ lot, wafer, onChanged }) {
   const [message, setMessage] = useState('');
   const inspection = wafer.latestInspection;
   const inspectionId = inspection?.id;
-  const canInspect = lot.status === 'IN_PROGRESS' && wafer.status !== 'INSPECTING';
+  const canInspect = lot.status === 'IN_PROGRESS' && wafer.status !== 'INSPECTING' && wafer.status !== 'REVIEW';
 
   useEffect(() => {
     fetchProcessHistory(wafer.waferId).then(setHistory).catch(e => setMessage(apiErrorMessage(e)));
@@ -62,7 +138,10 @@ function SlotPanel({ lot, wafer, onChanged }) {
 
       {inspection && (
         <div style={{ marginBottom: 20, fontSize: 14, color: '#1d1d1f' }}>
-          <p style={{ margin: '0 0 4px' }}>Prediction: <strong>{inspection.prediction ?? '-'}</strong></p>
+          <p style={{ margin: '0 0 4px' }}>AI prediction: <strong>{inspection.prediction ?? '-'}</strong></p>
+          {inspection.finalPrediction && inspection.finalPrediction !== inspection.prediction && (
+            <p style={{ margin: '0 0 4px' }}>Final: <strong>{inspection.finalPrediction}</strong></p>
+          )}
           <p style={{ margin: '0 0 4px' }}>Confidence: <strong>{inspection.confidence == null ? '-' : `${(inspection.confidence * 100).toFixed(1)}%`}</strong></p>
           <p style={{ margin: '0 0 4px' }}>Attempt: <strong>{inspection.attempt}</strong></p>
           {inspection.errorCode && <p style={{ margin: '0 0 4px', color: '#c62828' }}>Error: <strong>{inspection.errorCode}</strong></p>}
@@ -71,7 +150,7 @@ function SlotPanel({ lot, wafer, onChanged }) {
       )}
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
-        {inspection?.retryable && <button disabled={busy} onClick={() => run(() => retryInspection(inspection.id))} style={actionButton}>Retry</button>}
+        {inspection?.retryable && lot.status === 'IN_PROGRESS' && <button disabled={busy} onClick={() => run(() => retryInspection(inspection.id))} style={actionButton}>Retry</button>}
         {canInspect && (
           <label style={{ ...actionButton, background: busy ? '#a0a0a0' : '#0071e3', cursor: busy ? 'not-allowed' : 'pointer' }}>
             {busy ? 'Analyzing...' : 'Inspect Image'}
@@ -79,6 +158,9 @@ function SlotPanel({ lot, wafer, onChanged }) {
           </label>
         )}
       </div>
+      {inspection?.status === 'NEED_REVIEW' && (
+        <ReviewForm inspection={inspection} busy={busy} onSubmit={body => run(() => reviewInspection(inspection.id, body))} />
+      )}
       {message && <p role="alert" style={{ fontSize: 13, color: '#c62828', overflowWrap: 'anywhere' }}>{message}</p>}
 
       <p style={labelStyle}>INSPECTION TIMELINE</p>
@@ -135,6 +217,8 @@ export default function LotDetail() {
       </div>
       <p style={{ fontSize: 15, color: '#6e6e73', marginBottom: 28 }}>{lot.product}</p>
 
+      <HoldPanel lot={lot} onChanged={load} />
+
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ ...cardStyle, padding: 24, flex: '1 1 420px', minWidth: 0 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
@@ -154,7 +238,7 @@ export default function LotDetail() {
                   }}
                 >
                   <span style={{ fontSize: 16, fontWeight: 700 }}>{wafer.slotNo}</span>
-                  <span style={{ fontSize: 11, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wafer.latestInspection?.prediction ?? status.label}</span>
+                  <span style={{ fontSize: 11, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{wafer.latestInspection?.finalPrediction ?? wafer.latestInspection?.prediction ?? status.label}</span>
                 </button>
               );
             })}

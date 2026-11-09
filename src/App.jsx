@@ -7,12 +7,14 @@ import Analytics from './pages/Analytics';
 import Monitoring from './pages/Monitoring';
 import LotList from './pages/LotList';
 import LotDetail from './pages/LotDetail';
+import ReviewQueue from './pages/ReviewQueue';
 
 function Nav() {
   const location = useLocation();
   const links = [
     { to: '/', label: 'Dashboard' },
     { to: '/lots', label: 'Lots' },
+    { to: '/reviews', label: 'Reviews' },
     { to: '/analyze', label: 'Upload' },
     { to: '/records', label: 'Records' },
     { to: '/analytics', label: 'Analytics' },
@@ -53,6 +55,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/lots" element={<LotList />} />
           <Route path="/lots/:id" element={<LotDetail />} />
+          <Route path="/reviews" element={<ReviewQueue />} />
           <Route path="/analyze" element={<UploadAndAnalyze />} />
           <Route path="/records" element={<RecordList />} />
           <Route path="/records/:id" element={<RecordDetail />} />

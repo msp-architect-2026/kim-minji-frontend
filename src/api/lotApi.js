@@ -41,6 +41,26 @@ export const fetchProcessHistory = async (waferId) => {
   return res.data;
 };
 
+export const holdLot = async (id, body) => {
+  const res = await axios.post(`${API_URL}/lots/${id}/hold`, body);
+  return res.data;
+};
+
+export const releaseLot = async (id, body) => {
+  const res = await axios.post(`${API_URL}/lots/${id}/release`, body);
+  return res.data;
+};
+
+export const fetchPendingReviews = async (page = 0, size = 20) => {
+  const res = await axios.get(`${API_URL}/inspections/pending-reviews`, { params: { page, size } });
+  return res.data;
+};
+
+export const reviewInspection = async (id, body) => {
+  const res = await axios.post(`${API_URL}/inspections/${id}/review`, body);
+  return res.data;
+};
+
 // local 프로파일 backend에서만 동작한다
 export const simulate = async () => {
   const res = await axios.post(`${API_URL}/dev/simulate`);
