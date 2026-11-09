@@ -9,5 +9,6 @@ export const WAFER_STATUS = {
 
 export const LOT_STATUS = {
   IN_PROGRESS: { label: 'In Progress', bg: '#e8f0ff', color: '#0071e3' },
+  HOLD:        { label: 'Hold',        bg: '#ffebee', color: '#c62828' },
   COMPLETED:   { label: 'Completed',   bg: '#e8f5e9', color: '#2e7d32' },
 };
