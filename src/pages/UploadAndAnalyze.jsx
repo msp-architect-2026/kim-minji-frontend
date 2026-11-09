@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadAndAnalyze } from '../api/recordApi';
+import { apiErrorMessage, fetchLot, fetchLots, inspectWafer } from '../api/lotApi';
 
 const defectBadge = (prediction) => {
   if (!prediction || prediction === 'none') return { bg: '#e8f5e9', color: '#2e7d32' };
@@ -13,7 +14,28 @@ export default function UploadAndAnalyze() {
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [dragging, setDragging] = useState(false);
+  const [lots, setLots] = useState([]);
+  const [lotId, setLotId] = useState('');
+  const [wafers, setWafers] = useState([]);
+  const [slotNo, setSlotNo] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchLots(0, 100)
+      .then(page => setLots(page.content.filter(lot => lot.status === 'IN_PROGRESS')))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    setSlotNo('');
+    if (!lotId) {
+      setWafers([]);
+      return;
+    }
+    fetchLot(lotId)
+      .then(lot => setWafers(lot.wafers.filter(wafer => wafer.status !== 'INSPECTING')))
+      .catch(console.error);
+  }, [lotId]);
 
   const handleFile = (f) => {
     setFile(f);
@@ -32,17 +54,18 @@ export default function UploadAndAnalyze() {
     if (!file) return;
     setLoading(true);
     try {
-      const data = await uploadAndAnalyze(file);
+      const data = lotId ? await inspectWafer(lotId, slotNo, file) : await uploadAndAnalyze(file);
       setResult(data);
     } catch (e) {
       console.error('분석 실패:', e);
-      alert('Analysis failed. Please try again.');
+      alert(`Analysis failed: ${apiErrorMessage(e)}`);
     } finally {
       setLoading(false);
     }
   };
 
   const badge = result ? defectBadge(result.prediction) : null;
+  const uploadDisabled = loading || !file || (lotId && !slotNo);
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
@@ -75,6 +98,17 @@ export default function UploadAndAnalyze() {
         )}
       </div>
 
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <select aria-label="Lot" value={lotId} onChange={e => setLotId(e.target.value)} style={{ flex: 2, minWidth: 0, padding: '10px 12px', borderRadius: 10, border: '1px solid #d0d0d5', fontSize: 14, background: '#fff' }}>
+          <option value="">No lot (ad-hoc analysis)</option>
+          {lots.map(lot => <option key={lot.id} value={lot.id}>{lot.lotNo}</option>)}
+        </select>
+        <select aria-label="Slot" value={slotNo} disabled={!lotId} onChange={e => setSlotNo(e.target.value)} style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: 10, border: '1px solid #d0d0d5', fontSize: 14, background: '#fff' }}>
+          <option value="">Slot</option>
+          {wafers.map(wafer => <option key={wafer.waferId} value={wafer.slotNo}>Slot {wafer.slotNo}</option>)}
+        </select>
+      </div>
+
       {file && (
         <p style={{ fontSize: 13, color: '#6e6e73', marginBottom: 16 }}>
           Selected: <span style={{ color: '#1d1d1f', fontWeight: 500 }}>{file.name}</span>
@@ -83,12 +117,12 @@ export default function UploadAndAnalyze() {
 
       <button
         onClick={handleUpload}
-        disabled={loading || !file}
+        disabled={uploadDisabled}
         style={{
           width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-          background: loading || !file ? '#e0e0e0' : '#0071e3',
-          color: loading || !file ? '#a0a0a0' : '#fff',
-          fontSize: 16, fontWeight: 600, cursor: loading || !file ? 'not-allowed' : 'pointer',
+          background: uploadDisabled ? '#e0e0e0' : '#0071e3',
+          color: uploadDisabled ? '#a0a0a0' : '#fff',
+          fontSize: 16, fontWeight: 600, cursor: uploadDisabled ? 'not-allowed' : 'pointer',
           transition: 'background 0.2s ease', marginBottom: 32
         }}
       >
@@ -125,13 +159,13 @@ export default function UploadAndAnalyze() {
           </div>
           <div style={{ padding: '0 32px 28px' }}>
             <button
-              onClick={() => navigate(`/records/${result.id}`)}
+              onClick={() => navigate(lotId ? `/lots/${lotId}` : `/records/${result.id}`)}
               style={{
                 padding: '10px 24px', borderRadius: 10, border: '1px solid #0071e3',
                 background: 'transparent', color: '#0071e3', fontSize: 14,
                 fontWeight: 500, cursor: 'pointer'
               }}
-            >View Detail →</button>
+            >{lotId ? 'View Lot →' : 'View Detail →'}</button>
           </div>
         </div>
       )}
